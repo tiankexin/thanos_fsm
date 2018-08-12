@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import functools
 import six
 from copy import copy
 
@@ -48,7 +47,6 @@ class Event(object):
         :param kwargs: TODO add conditions
         """
         self.to_state = to_state
-        self.from_states = tuple()
         if isinstance(from_states, (tuple, list)):
             self.from_states = tuple(from_states)
         else:
@@ -111,8 +109,6 @@ class MetaclassFSM(type):
         if state_name in state_dict:
             raise RuntimeError("Duplicated State!")
 
-        if state_desc.initial:
-            state_dict["__state__"] = state_desc
         is_state_string = "is_" + state_name
 
         def is_state(self):
@@ -140,6 +136,16 @@ class BaseFSM(object):
     __value_map__ = {}
 
     __bind_instance__ = None
+
+    def __init__(self, bind_instance=None):
+
+        if bind_instance is not None:
+            self.__bind_instance__ = bind_instance
+
+        for state_desc in self.show():
+            if state_desc.initial:
+                self.__state__ = state_desc
+                break
 
     def reset_by_value(self, value):
         if value not in self.__value_map__:
@@ -177,37 +183,18 @@ class FsmPatcher(object):
         self.modify_init()
         return self.origin_cls
 
-    def modify_event(self, state_fsm):
-        def patch_event(event_func):
-
-            @functools.wraps(event_func)
-            def inner_wrapper(*args, **kwargs):
-                event_func(*args, **kwargs)
-                if self.state_value:
-                    setattr(state_fsm.__bind_instance__,
-                            self.state_value, state_fsm.current.value)
-                if self.state_remark:
-                    setattr(state_fsm.__bind_instance__,
-                            self.state_remark, state_fsm.current.remark)
-            return inner_wrapper
-        for event_name in state_fsm.event_fields:
-            setattr(state_fsm, event_name, patch_event(getattr(state_fsm, event_name)))
-
     def modify_init(self):
         origin_init = self.origin_cls.__init__
 
         def change_init_func(obj, *args, **kwargs):
-            obj.state_fsm = self.fsm_cls()
+            self.fsm_cls.__state__ = BoundState(self.state_value, self.state_remark)
+            # obj.state_fsm.__bind_instance__ = obj
             res = origin_init(obj, *args, **kwargs)
             curr_value = getattr(obj, str(self.state_value), None)
+            obj.state_fsm = self.fsm_cls(bind_instance=obj)
             if curr_value is not None:
                 obj.state_fsm.reset_by_value(curr_value)
-            if self.state_value is not None:
-                setattr(obj, self.state_value, obj.state_fsm.current.value)
-            if self.state_remark is not None:
-                setattr(obj, self.state_remark, obj.state_fsm.current.remark)
-            obj.state_fsm.__bind_instance__ = obj
-            self.modify_event(obj.state_fsm)
+            # obj.state_fsm.__state__ = obj.state_fsm.__state__
             return res
         self.origin_cls.__init__ = change_init_func
 
@@ -222,31 +209,42 @@ def register_fsm(fsm_cls, **kwargs):
 
 class FsmFieldFactory(object):
 
+    """
+    modify orm fields
+    """
+
     @classmethod
     def modify(cls, field_type):
 
         def path_set(self, instance, value):
             super(self.__class__, self).__set__(instance, value)
-            instance.state_fsm.reset_by_value(value)
+            if value is not None and hasattr(instance, "state_fsm"):
+                if value not in instance.state_fsm.__value_map__:
+                    raise RuntimeError("Invalid value!")
+                else:
+                    instance.state_fsm.reset_by_value(value)
+            else:
+                pass
         return type("FsmField", (field_type, ), {"__set__": path_set})
 
 
 class BoundState(object):
 
-    def __init__(self, state, state_value, state_remark):
-        self.state = state
+    def __init__(self, state_value, state_remark):
         self.state_value = state_value
         self.state_remark = state_remark
+        self.name = "__state__"
 
     def __set__(self, instance, value):
-        if value != self.state:
-            self.state = value
-            if self.state_value is not None:
-                setattr(instance, self.state_value, self.state.current.value)
-            if self.state_remark is not None:
-                setattr(instance, self.state_remark, self.state.current.remark)
+        old_value = instance.__dict__.get(self.name, None)
+        if value != old_value:
+            instance.__dict__[self.name] = value
+            if instance.__bind_instance__ and self.state_value is not None:
+                setattr(instance.__bind_instance__, self.state_value, value.value)
+            if instance.__bind_instance__ and self.state_remark is not None:
+                setattr(instance.__bind_instance__, self.state_remark, value.remark)
         else:
             pass
 
     def __get__(self, instance, owner):
-        return self.state
+        return instance.__dict__[self.name]

@@ -37,7 +37,7 @@ class TestInst(BaseDBDocument):
 i = TestInst()
 
 """
-from thanos_fsm.base import register_fsm, BaseFSM, MetaclassFSM, State, Event
+from thanos_fsm.base import register_fsm, BaseFSM, MetaclassFSM, State, Event, FsmFieldFactory
 
 __all__ = ["register_fsm", "BaseFSM", "MetaclassFSM",
-           "State", "Event"]
+           "State", "Event", "FsmFieldFactory"]
