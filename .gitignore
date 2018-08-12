@@ -1,0 +1,15 @@
+*.pyc
+.DS_Store
+*.txt
+!requirements.txt
+.env
+.svn
+.CVS
+.idea
+.vscode/
+gen_idl
+*.sh
+*.log
+.venv/
+venv/
+dist/
