@@ -10,6 +10,7 @@ setup(
     packages=find_packages(),
     package_dir={'thanos_fsm': 'thanos_fsm'},
     description='most pythonic Finite State Machine',
+    long_description="This is a pythonic style tool for FSM. Welcome to use it, and star on my Github. Thank you!",
     license="BSD 2-Clause License",
     url="https://github.com/tiankexin/thanos_fsm",
     author="tiankexin",
