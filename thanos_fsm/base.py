@@ -100,7 +100,14 @@ class MetaclassFSM(type):
             for hook_fn in event_desc._after_callback:
                 hook_fn(self)
 
+        def can_transfer(self):
+            if self.__state__ in event_desc.from_states:
+                return True
+            else:
+                return False
+        can_transfer_str = "can_" + event_name
         event_dict[event_name] = event_method
+        event_dict[can_transfer_str] = can_transfer
         event_dict.setdefault("event_fields", []).append(event_name)
 
     @classmethod

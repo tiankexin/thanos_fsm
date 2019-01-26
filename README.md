@@ -35,6 +35,7 @@ i.current          # <Status:await# -1:待执行>
 i.is_success       # False
 i.is_await         # True
 i.show()           # [<Status:success# 1:处理成功>,<Status:doing# 0:处理中>,<Status:await# -1:待执行>,<Status:error# 2:处理失败>]
+i.can_exec_start() # True     判断是否能够进行该Event类型操作
 i.exec_start()
 i.current          # <Status:doing# 0:处理中>
 i.exec_success()
