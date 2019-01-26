@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-__VERSION__ = "0.0.1"
+__VERSION__ = "0.0.2"
 
 setup(
     name='thanos_fsm',
