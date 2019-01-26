@@ -13,3 +13,4 @@ gen_idl
 .venv/
 venv/
 dist/
+thanos_fsm.egg-info/

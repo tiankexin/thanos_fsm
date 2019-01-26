@@ -7,7 +7,7 @@ thanos_fsm是本人研发的python应用框架thanos中抽离出来的一个通�
 ```
 pip install thanos_fsm
 ```
-如果查找不到，可能说明笔者较懒，还没来得及打包上传，可自行git clone使用 = =！
+如果从原本的PYPI源被墙无法安装,可以通过[https://pypi.org/project/thanos_fsm/0.0.1/#files](https://pypi.org/project/thanos_fsm/0.0.1/#files)手动下载安装.
 
 ## 使用范例
 
